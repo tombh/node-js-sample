@@ -29,6 +29,28 @@ if(process.env.MONGODB_URI){
   })
 }
 
+if(process.env.POSTGRES_URI){
+  app.get('/postgres', function(request, response) {
+    var pg = require('pg');
+
+    pg.connect(process.env.POSTGRES_URI, function(err, client, done) {
+      if(err) {
+        return console.error('error fetching client from pool', err);
+      }
+      client.query('SELECT $1::int AS number', ['1'], function(err, result) {
+        //call `done()` to release the client back to the pool
+        done();
+
+        if(err) {
+          return console.error('error running query', err);
+        }
+        response.send(result.rows[0].number.toString());
+        //output: 1
+      });
+    });
+  });
+}
+
 app.listen(app.get('port'), function() {
   console.log("Node app is running at localhost:" + app.get('port'))
 })
